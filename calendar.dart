@@ -1,31 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'mongodb.dart';
+import 'mongodbmodel.dart';
 
 class CalendarPage extends StatefulWidget {
-  const CalendarPage({super.key});
+  final MongoDbModel user;
+  const CalendarPage({super.key,required this.user});
 
   @override
   State<CalendarPage> createState() => _CalendarPageState();
 }
 
 class _CalendarPageState extends State<CalendarPage> {
-  Map<DateTime, List<Map<String, String>>> events = {
-    DateTime.utc(2024, 12, 8): [
-      {'title': 'Public Holiday', 'type': 'public'},
-      {'title': 'Hackathon Kickoff', 'type': 'hackathon'},
-    ],
-    DateTime.utc(2024, 12, 10): [
-      {'title': 'Midterm Exam', 'type': 'exam'},
-      {'title': 'Team Meeting', 'type': 'public'},
-    ],
-    DateTime.utc(2024, 12, 12): [
-      {'title': 'Finals Preparation', 'type': 'exam'},
-    ],
-    DateTime.utc(2024, 12, 15): [
-      {'title': 'Coding Bootcamp', 'type': 'hackathon'},
-    ],
-  };
+  Map<DateTime, List<Map<String, String>>> events = {};
   DateTime selectedDate = DateTime.now();
+
+  Map<DateTime, List<Map<String, String>>> convertEventsToMap(List<Event> events) {
+    Map<DateTime, List<Map<String, String>>> eventMap = {};
+
+    for (var event in events) {
+      if (eventMap.containsKey(event.date)) {
+        eventMap[DateTime.utc(event.date.year,event.date.month,event.date.day)]?.addAll(event.details.map((detail) => {
+          'title': detail.title,
+          'type': detail.type,
+        }).toList());
+      } else {
+        eventMap[DateTime.utc(event.date.year,event.date.month,event.date.day)] = event.details.map((detail) => {
+          'title': detail.title,
+          'type': detail.type,
+        }).toList();
+      }
+    }
+
+    return eventMap;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    events = convertEventsToMap(widget.user.events);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -159,7 +173,7 @@ class _CalendarPageState extends State<CalendarPage> {
             child: const Text("Cancel"),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async{
               if (eventController.text.isNotEmpty) {
                 setState(() {
                   if (events[selectedDate] == null) {
@@ -170,6 +184,28 @@ class _CalendarPageState extends State<CalendarPage> {
                     'type': eventType,
                   });
                 });
+              }
+              try{
+                MongoDbModel user = widget.user;
+                user.events.clear();
+                events.forEach((date, eventList) {
+                  user.events.add(Event(
+                    date: date,
+                    details: eventList.map((event) => Detail(
+                      title: event['title'] ?? '',
+                      type: event['type'] ?? '',
+                    )).toList(),
+                  ));
+                });
+                String result = await MongoDatabase.update(user);
+                print(result);  // Output the result of the update operation
+
+                // Optionally, display a success message to the user
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Event added successfully")));
+              }
+              catch(e){
+                print("Error updating database: $e");
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error adding event")));
               }
               Navigator.pop(context);
             },
