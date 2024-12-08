@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:onestop/calendar.dart';
 import 'package:onestop/examschedules.dart';
+import 'package:onestop/login.dart';
+import 'mongodbmodel.dart';
 
 class Dashboard extends StatefulWidget {
-  const Dashboard({super.key});
+  final MongoDbModel user;
+  const Dashboard({super.key,required this.user});
 
   @override
   State<Dashboard> createState() => _DashboardState();
 }
 
 class _DashboardState extends State<Dashboard> {
-  int currencyCount = 100;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,10 +37,15 @@ class _DashboardState extends State<Dashboard> {
               const Icon(Icons.currency_exchange),
               const SizedBox(width: 4),
               Text(
-                '$currencyCount',
+                '${widget.user.credit}',
                 style: const TextStyle(fontSize: 18),
               ),
-              const SizedBox(width: 16), // Space between icon and edge
+              ElevatedButton(onPressed: (){
+                Navigator.push(context, MaterialPageRoute(builder: (context)=>LoginPage()));
+              }, child: Icon(Icons.logout),
+              style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.transparent),
+              elevation: MaterialStateProperty.all(0),
+              )),
             ],
           ),
         ],
@@ -74,19 +81,19 @@ class _DashboardState extends State<Dashboard> {
       body: Center(
         child: Column(
           children: [
-            const Card(
+            Card(
               elevation: 5,
               margin: EdgeInsets.all(16),
               child: Padding(
                 padding: EdgeInsets.all(16),
                 child: Text(
-                  "Hello",
+                  "Hello, ${widget.user.name}!!",
                   style: TextStyle(fontSize: 20),
                 ),
               ),
             ),
             ElevatedButton(onPressed: (){
-              Navigator.push(context, MaterialPageRoute(builder: (context)=>CalendarPage()));
+              Navigator.push(context, MaterialPageRoute(builder: (context)=>CalendarPage(user: widget.user,)));
             }, child: const Text("Click")),
             Card(
               elevation: 3,
