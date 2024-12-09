@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:onestop/announcementpage.dart';
+import 'package:onestop/attendancepage.dart';
 import 'package:onestop/calendar.dart';
+import 'package:onestop/cgpacalculator.dart';
 import 'package:onestop/examschedules.dart';
 import 'package:onestop/login.dart';
+import 'package:onestop/trackattendance.dart';
 import 'mongodbmodel.dart';
 
 class Dashboard extends StatefulWidget {
@@ -79,33 +83,75 @@ class _DashboardState extends State<Dashboard> {
         ),
       ),
       body: Center(
-        child: Column(
-          children: [
-            Card(
-              elevation: 5,
-              margin: EdgeInsets.all(16),
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Text(
-                  "Hello, ${widget.user.name}!!",
-                  style: TextStyle(fontSize: 20),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Card(
+                elevation: 5,
+                margin: EdgeInsets.all(16),
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    "Hello, ${widget.user.name}!!",
+                    style: TextStyle(fontSize: 20),
+                  ),
                 ),
               ),
-            ),
-            ElevatedButton(onPressed: (){
-              Navigator.push(context, MaterialPageRoute(builder: (context)=>CalendarPage(user: widget.user,)));
-            }, child: const Text("Click")),
-            Card(
-              elevation: 3,
-              margin: EdgeInsets.all(16),
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: ElevatedButton(onPressed: (){
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=>SchedulePage()));
-                }, child: Text("data")),
+              ElevatedButton(onPressed: (){
+                Navigator.push(context, MaterialPageRoute(builder: (context)=>CalendarPage(user: widget.user,)));
+              }, child: const Text("Click")),
+              Card(
+                elevation: 3,
+                margin: EdgeInsets.all(16),
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: ElevatedButton(onPressed: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>SchedulePage()));
+                  }, child: Text("data")),
+                ),
               ),
-            )
-          ],
+              Card(
+                elevation: 3,
+                margin: EdgeInsets.all(16),
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: ElevatedButton(onPressed: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>AnnouncementPage()));
+                  }, child: Text("Announcement")),
+                ),
+              ),
+              Card(
+                elevation: 3,
+                margin: EdgeInsets.all(16),
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: ElevatedButton(onPressed: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>AttendancePage()));
+                  }, child: Text("Attendance")),
+                ),
+              ),
+              Card(
+                elevation: 3,
+                margin: EdgeInsets.all(16),
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: ElevatedButton(onPressed: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>TrackAttendance()));
+                  }, child: Text("Track Attendance")),
+                ),
+              ),
+              Card(
+                elevation: 3,
+                margin: EdgeInsets.all(16),
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: ElevatedButton(onPressed: (){
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>CGPACalculator()));
+                  }, child: Text("Calculate CGPA")),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
