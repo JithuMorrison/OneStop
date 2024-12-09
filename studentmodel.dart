@@ -7,7 +7,7 @@ StudentModel StudentModelFromJson(String str) => StudentModel.fromJson(json.deco
 String StudentModelToJson(StudentModel data) => json.encode(data.toJson());
 
 class StudentModel {
-  ObjectId id;
+  String id;
   String section;
   String dept;
   List<Student> student;
@@ -37,7 +37,7 @@ class StudentModel {
 class Student {
   String name;
   String email;
-  Attendance attendance;
+  List<List<dynamic>> attendance;
 
   Student({
     required this.name,
@@ -48,28 +48,12 @@ class Student {
   factory Student.fromJson(Map<String, dynamic> json) => Student(
     name: json["name"],
     email: json["email"],
-    attendance: Attendance.fromJson(json["attendance"]),
+    attendance: List<List<dynamic>>.from(json["attendance"].map((x) => List<dynamic>.from(x.map((x) => x)))),
   );
 
   Map<String, dynamic> toJson() => {
     "name": name,
     "email": email,
-    "attendance": attendance.toJson(),
-  };
-}
-
-class Attendance {
-  List<DateTime> se;
-
-  Attendance({
-    required this.se,
-  });
-
-  factory Attendance.fromJson(Map<String, dynamic> json) => Attendance(
-    se: List<DateTime>.from(json["se"].map((x) => DateTime.parse(x))),
-  );
-
-  Map<String, dynamic> toJson() => {
-    "se": List<dynamic>.from(se.map((x) => "${x.year.toString().padLeft(4, '0')}-${x.month.toString().padLeft(2, '0')}-${x.day.toString().padLeft(2, '0')}")),
+    "attendance": List<dynamic>.from(attendance.map((x) => List<dynamic>.from(x.map((x) => x)))),
   };
 }
