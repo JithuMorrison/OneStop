@@ -1,16 +1,48 @@
 import 'package:mongo_dart/mongo_dart.dart';
+import 'package:onestop/announcementmodel.dart';
+import 'package:onestop/studentmodel.dart';
 import 'dbhelper.dart';
 import 'mongodbmodel.dart';
 
 class MongoDatabase {
-  static var db, userCollection,announcements;
+  static var db, userCollection,announcements,attendance,cgpa;
   static connect() async {
     db = await Db.create(MONGO_CONN_URL);
     await db.open();
     userCollection = db.collection(USER_COLLECTION);
     announcements = db.collection(ANNOUNCEMENTS);
+    attendance = db.collection(ATTENDANCE);
+    cgpa = db.collection(CGPA);
     if(db.isConnected){
       print("Successfully connected");
+    }
+  }
+
+  static Future<String> insertannouncement(AnnouncementModel data) async {
+    try {
+      var result = await announcements.insertOne(data.toJson());
+      if (result.isSuccess) {
+        return "Data Inserted Successfully";
+      } else {
+        return "Data Insertion Failed";
+      }
+    } catch (e) {
+      print("Error during insertion: $e");
+      return e.toString();
+    }
+  }
+
+  static Future<String> insertclass(StudentModel data) async {
+    try {
+      var result = await attendance.insertOne(data.toJson());
+      if (result.isSuccess) {
+        return "Data Inserted Successfully";
+      } else {
+        return "Data Insertion Failed";
+      }
+    } catch (e) {
+      print("Error during insertion: $e");
+      return e.toString();
     }
   }
 
