@@ -56,11 +56,8 @@ class _AttendancePageState extends State<AttendancePage> {
           studentData.map((student) => Student(
             name: student['name'].toString(),
             email: student['email'].toString(),
-            attendance: Attendance(
-              se: (student['attendance']['se'] ?? [])
-                  .map<DateTime>((dateString) => DateTime.parse(dateString))
-                  .toList(),
-            ),
+            attendance: [[[selectedSubject],(student['attendance'][0][1] ?? [])
+            ] ]
           )),
         );
       });
@@ -107,17 +104,13 @@ class _AttendancePageState extends State<AttendancePage> {
   }
 
   void takeAttendance(String dept, String section) {
-    DateTime today = DateTime.now();
-    DateTime normalizedToday = DateTime(today.year, today.month, today.day);
 
-    print("Updated Students List:");
+    print(students.map((student) => student.toJson()).toList());
     for (var student in students) {
       print({
         "name": student.name,
         "email": student.email,
-        "attendance": {
-          "se": student.attendance.se.map((date) => date.toIso8601String()).toList()
-        },
+        "attendance": [[[selectedSubject],[student.attendance[0][1].map((date) => date.toString()).toList()]]]
       });
     }
 
@@ -127,7 +120,18 @@ class _AttendancePageState extends State<AttendancePage> {
       {
         "dept": dept,
         "section": section,
-        "students": students.map((student) => student.toJson()).toList(),
+        "students": students.map((student) {
+          return {
+            "name": student.name,
+            "email": student.email,
+            "attendance": student.attendance.map((attendanceRecord) {
+              return [
+                attendanceRecord[0],
+                attendanceRecord[1].map<String>((date) => date.toString()).toList(),
+              ];
+            }).toList(),
+          };
+        }).toList(),
       },
       upsert: true,
     );
@@ -182,7 +186,7 @@ class _AttendancePageState extends State<AttendancePage> {
                               students.add(Student(
                                 name: nameController.text,
                                 email: emailController.text,
-                                attendance: Attendance(se: []),
+                                attendance: [[[selectedSubject],[]]],
                               ));
                               nameController.clear();
                               emailController.clear();
@@ -253,20 +257,19 @@ class _AttendancePageState extends State<AttendancePage> {
                   return CheckboxListTile(
                     title: Text(student.name),
                     subtitle: Text(student.email),
-                    value: student.attendance.se.contains(
+                    value: student.attendance[0][1].contains(
                       DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
                     ),
                     onChanged: (value) {
                       setState(() {
                         DateTime today = DateTime.now();
                         DateTime normalizedToday = DateTime(today.year, today.month, today.day);
-
                         if (value == true) {
-                          if (!student.attendance.se.contains(normalizedToday)) {
-                            student.attendance.se.add(normalizedToday);
+                          if (!student.attendance[0][1].contains(normalizedToday)) {
+                            student.attendance[0][1].add(normalizedToday);
                           }
                         } else {
-                          student.attendance.se.remove(normalizedToday);
+                          student.attendance[0][1].remove(normalizedToday);
                         }
                       });
                     },
