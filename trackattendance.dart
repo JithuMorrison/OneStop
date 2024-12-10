@@ -11,7 +11,8 @@ class TrackAttendance extends StatefulWidget {
 
 class _TrackAttendanceState extends State<TrackAttendance> {
   final TextEditingController emailController = TextEditingController();
-  List<DateTime> attendance = [];
+  List<String> subject = [];
+  List<List<DateTime>> attendance = [];
 
   var dbCollection;
 
@@ -33,10 +34,15 @@ class _TrackAttendanceState extends State<TrackAttendance> {
 
       if (student != null) {
         setState(() {
-          attendance = List<DateTime>.from(
-            (student["attendance"][0][1] as List)
-                .map((x) => DateTime.parse(x)),
-          );
+          for (var record in student["attendance"]) {
+            var subjectAttendance = (record[1] as List)
+                .map((x) => DateTime.parse(x));
+            String subjectname = record[0][0].toString();
+            print(subjectAttendance);
+            attendance.add(subjectAttendance.toList());
+            print(attendance);
+            subject.add(subjectname);
+          }
         });
       } else {
         print("Student not found in the list");
@@ -67,7 +73,26 @@ class _TrackAttendanceState extends State<TrackAttendance> {
               itemCount: attendance.length,
               itemBuilder: (context, index) {
                 return ListTile(
-                  title: Text("${attendance[index].toLocal()}"),
+                  title: Column(
+                    children: [
+                      Text("${subject[index]}"),
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxHeight: attendance[index].length > 3 ? 150.0 : attendance[index].length * 50.0,
+                        ),
+                        child: ListView.builder(
+                          shrinkWrap: true, // Ensures the ListView takes only the required height
+                          physics: attendance[index].length > 3
+                              ? ScrollPhysics() // Enables scrolling when the number of items exceeds the limit
+                              : NeverScrollableScrollPhysics(), // Disables scrolling for fewer items
+                          itemCount: attendance[index].length,
+                          itemBuilder: (context, attIndex) {
+                            return Center(child: Text("${attendance[index][attIndex]}"));
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
