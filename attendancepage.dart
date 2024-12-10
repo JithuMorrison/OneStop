@@ -12,17 +12,19 @@ class AttendancePage extends StatefulWidget {
 class _AttendancePageState extends State<AttendancePage> {
   String? selectedDept;
   String? selectedSection;
-  String? selectedSubject='se';
+  String? selectedSubject;
   List<Student> students = [];
   List<String> depts = [];
   List<String> sections = [];
-  List<String> subject = [];
+  List<String> subjects = [];
   Map<String, List<Student>> attendanceRecords = {};
+  int selectedSubjectIndex=0;
 
   final TextEditingController deptController = TextEditingController();
   final TextEditingController sectionController = TextEditingController();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
+  final TextEditingController subjectController = TextEditingController();
 
   var dbCollection; // MongoDB collection for storing attendance
 
@@ -51,13 +53,33 @@ class _AttendancePageState extends State<AttendancePage> {
       final studentData = data.isNotEmpty
           ? data[0]['students'] // Assuming 'students' is in the first document
           : [];
+      Set<String> subjectos = Set<String>();
       setState(() {
+          for (var attendance in studentData[0]['attendance']) {
+            subjectos.add(attendance[0][0].toString());
+          }
+          subjects = subjectos.toList();
         students = List<Student>.from(
           studentData.map((student) => Student(
             name: student['name'].toString(),
             email: student['email'].toString(),
-            attendance: [[[selectedSubject],(student['attendance'][0][1] ?? [])
-            ] ]
+            attendance: List<List<List<dynamic>>>.from(
+              student['attendance'].map((attendanceItem) {
+                var subject = attendanceItem[0][0].toString();
+                var dates = List<DateTime>.from(
+                    attendanceItem[1].map((date) {
+                      if (date is String) {
+                        return DateTime.parse(date); // Parse string to DateTime
+                      } else if (date is DateTime) {
+                        return date; // If already DateTime, keep it as is
+                      } else {
+                        return DateTime(1970, 1, 1); // Default to a placeholder date if invalid
+                      }
+                    })
+                );
+                return [[subject], dates];
+              }).toList(),
+            ),
           )),
         );
       });
@@ -68,7 +90,7 @@ class _AttendancePageState extends State<AttendancePage> {
     if (deptController.text.isNotEmpty && sectionController.text.isNotEmpty) {
       String dept = deptController.text;
       String section = sectionController.text;
-
+      print(subjects);
       setState(() {
         selectedDept = dept;
         selectedSection = section;
@@ -82,10 +104,29 @@ class _AttendancePageState extends State<AttendancePage> {
         if (!attendanceRecords.containsKey(key)) {
           attendanceRecords[key] = [];
         }
+        for (var student in students) {
+          student.attendance = [];
+          for (var subject in subjects) {
+            if (!student.attendance.any((attendance) => attendance[0][0] == subject)) {
+                List<List<dynamic>> attend = [[subject],[]];
+                student.attendance.add(attend);
+                print(attend);
+            }
+          }
+        }
         attendanceRecords[key]!.addAll(students);
-        print(attendanceRecords);
-        // Clear input fields
-        students = [];
+        /*print(students.map((student) {
+          return {
+            "name": student.name,
+            "email": student.email,
+            "attendance": student.attendance.map((attendanceRecord) {
+              return [
+                attendanceRecord[0],
+                attendanceRecord[1].map<String>((date) => date.toString()).toList(),
+              ];
+            }).toList()..sort((a, b) => a[0].toString().compareTo(b[0].toString())),
+          };
+        }).toList());*/
       });
 
       // Save to MongoDB
@@ -94,12 +135,22 @@ class _AttendancePageState extends State<AttendancePage> {
         {
           "dept": dept,
           "section": section,
-          "students": attendanceRecords["$dept-$section"]!
-              .map((e) => e.toJson())
-              .toList()
+          "students": students.map((student) {
+          return {
+            "name": student.name,
+            "email": student.email,
+            "attendance": student.attendance.map((attendanceRecord) {
+              return [
+                attendanceRecord[0],
+                attendanceRecord[1].map<String>((date) => date.toString()).toList(),
+              ];
+            }).toList()..sort((a, b) => a[0].toString().compareTo(b[0].toString())),
+          };
+        }).toList(),
         },
         upsert: true,
       );
+      print("updated");
     }
   }
 
@@ -113,6 +164,8 @@ class _AttendancePageState extends State<AttendancePage> {
         "attendance": [[[selectedSubject],[student.attendance[0][1].map((date) => date.toString()).toList()]]]
       });
     }
+    print(selectedSubject);
+    print(students[0].attendance[0][0][0]);
 
     // Save to MongoDB
     dbCollection.update(
@@ -151,50 +204,84 @@ class _AttendancePageState extends State<AttendancePage> {
                 builder: (context) {
                   return AlertDialog(
                     title: const Text("Add/Update Students"),
-                    content: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TextField(
-                          controller: deptController,
-                          decoration: const InputDecoration(labelText: "Department"),
-                        ),
-                        TextField(
-                          controller: sectionController,
-                          decoration: const InputDecoration(labelText: "Section"),
-                        ),
-                        ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: students.length,
-                          itemBuilder: (context, index) {
-                            return ListTile(
-                              title: Text(students[index].name),
-                              subtitle: Text(students[index].email),
-                            );
-                          },
-                        ),
-                        TextField(
-                          controller: nameController,
-                          decoration: const InputDecoration(labelText: "Name"),
-                        ),
-                        TextField(
-                          controller: emailController,
-                          decoration: const InputDecoration(labelText: "Email"),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              students.add(Student(
-                                name: nameController.text,
-                                email: emailController.text,
-                                attendance: [[[selectedSubject],[]]],
-                              ));
-                              nameController.clear();
-                              emailController.clear();
-                            });
-                          },
-                          child: const Text("Add Student"),
-                        ),
-                      ],
+                    content: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextField(
+                            controller: deptController,
+                            decoration: const InputDecoration(labelText: "Department"),
+                          ),
+                          TextField(
+                            controller: sectionController,
+                            decoration: const InputDecoration(labelText: "Section"),
+                          ),
+                          DropdownButton<String>(
+                            hint: const Text("Select Subject"),
+                            value: selectedSubject,
+                            onChanged: (value) {
+                              setState(() {
+                                selectedSubject = value;
+                              });
+                            },
+                            items: subjects.map((subject) {
+                              return DropdownMenuItem(
+                                value: subject,
+                                child: Text(subject),
+                              );
+                            }).toList(),
+                          ),
+                          TextField(
+                            controller: subjectController,
+                            decoration: const InputDecoration(labelText: "Add New Subject"),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                if (subjectController.text.isNotEmpty &&
+                                    !subjects.contains(subjectController.text)) {
+                                  subjects.add(subjectController.text);
+                                  selectedSubject = subjectController.text;
+                                  subjectController.clear();
+                                }
+                              });
+                            },
+                            child: const Text("Add Subject"),
+                          ),
+                          ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: students.length,
+                            itemBuilder: (context, index) {
+                              return ListTile(
+                                title: Text(students[index].name),
+                                subtitle: Text(students[index].email),
+                              );
+                            },
+                          ),
+                          TextField(
+                            controller: nameController,
+                            decoration: const InputDecoration(labelText: "Name"),
+                          ),
+                          TextField(
+                            controller: emailController,
+                            decoration: const InputDecoration(labelText: "Email"),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                students.add(Student(
+                                  name: nameController.text,
+                                  email: emailController.text,
+                                  attendance: [[[selectedSubject],[]]],
+                                ));
+                                nameController.clear();
+                                emailController.clear();
+                              });
+                            },
+                            child: const Text("Add Student"),
+                          ),
+                        ],
+                      ),
                     ),
                     actions: [
                       ElevatedButton(
@@ -248,6 +335,23 @@ class _AttendancePageState extends State<AttendancePage> {
               );
             }).toList(),
           ),
+          DropdownButton<String>(
+            hint: const Text("Select Subject"),
+            value: selectedSubject,
+            onChanged: (value) {
+              setState(() {
+                selectedSubject = value;
+                selectedSubjectIndex = subjects.indexOf(value!);
+                print(selectedSubjectIndex);
+              });
+            },
+            items: subjects.map((subject) {
+              return DropdownMenuItem(
+                value: subject,
+                child: Text(subject),
+              );
+            }).toList(),
+          ),
           if (selectedDept != null && selectedSection != null && students.isNotEmpty)
             Expanded(
               child: ListView.builder(
@@ -257,19 +361,21 @@ class _AttendancePageState extends State<AttendancePage> {
                   return CheckboxListTile(
                     title: Text(student.name),
                     subtitle: Text(student.email),
-                    value: student.attendance[0][1].contains(
-                      DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
+                    value: student.attendance[selectedSubjectIndex][1].contains(
+                      DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day,DateTime.now().hour),
                     ),
                     onChanged: (value) {
                       setState(() {
                         DateTime today = DateTime.now();
-                        DateTime normalizedToday = DateTime(today.year, today.month, today.day);
+                        DateTime normalizedToday = DateTime(today.year, today.month, today.day,today.hour);
+
                         if (value == true) {
-                          if (!student.attendance[0][1].contains(normalizedToday)) {
-                            student.attendance[0][1].add(normalizedToday);
+                          // Check if the date is not already in the attendance list
+                          if (!student.attendance[selectedSubjectIndex][1].contains(normalizedToday)) {
+                            student.attendance[selectedSubjectIndex][1].add(normalizedToday);
                           }
                         } else {
-                          student.attendance[0][1].remove(normalizedToday);
+                          student.attendance[selectedSubjectIndex][1].remove(normalizedToday);
                         }
                       });
                     },
