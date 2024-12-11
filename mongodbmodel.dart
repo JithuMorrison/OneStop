@@ -14,6 +14,9 @@ class MongoDbModel {
   String phoneNumber;
   String role;
   String dob;
+  String dept;
+  String section;
+  String year;
   int credit;
   List<Event> events;
 
@@ -25,6 +28,9 @@ class MongoDbModel {
     required this.phoneNumber,
     required this.role,
     required this.dob,
+    required this.dept,
+    required this.section,
+    required this.year,
     required this.credit,
     required this.events,
   });
@@ -37,6 +43,9 @@ class MongoDbModel {
     phoneNumber: json["phone_number"],
     role: json["role"],
     dob: json["dob"],
+    dept: json["dept"],
+    section: json["section"],
+    year: json["year"],
     credit: json["credit"],
     events: List<Event>.from(json["events"].map((x) => Event.fromJson(x))),
   );
@@ -49,6 +58,9 @@ class MongoDbModel {
     "phone_number": phoneNumber,
     "role": role,
     "dob": dob,
+    "dept":dept,
+    "section":section,
+    "year":year,
     "credit": credit,
     "events": List<dynamic>.from(events.map((x) => x.toJson())),
   };
