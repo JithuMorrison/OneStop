@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'calendareventsmodel.dart' as cal;
 import 'mongodb.dart';
 import 'mongodbmodel.dart';
+import 'package:mongo_dart/mongo_dart.dart' as mongo;
 
 class CalendarPage extends StatefulWidget {
   final MongoDbModel user;
@@ -14,6 +16,8 @@ class CalendarPage extends StatefulWidget {
 class _CalendarPageState extends State<CalendarPage> {
   Map<DateTime, List<Map<String, String>>> events = {};
   DateTime selectedDate = DateTime.now();
+
+  var eventdb;
 
   Map<DateTime, List<Map<String, String>>> convertEventsToMap(List<Event> events) {
     Map<DateTime, List<Map<String, String>>> eventMap = {};
@@ -35,10 +39,67 @@ class _CalendarPageState extends State<CalendarPage> {
     return eventMap;
   }
 
+  Future<Map<DateTime, List<Map<String, String>>>> eventMapping() async {
+    try {
+      final events = await eventdb.find().toList();
+      Map<DateTime, List<Map<String, String>>> eventMap = {};
+
+      for (var event in events) {
+        final calendarEvent = cal.CalendarEventModel.fromJson(event);
+        for (var eventDetail in calendarEvent.events) {
+          final eventDate = DateTime.utc(
+            DateTime.parse(eventDetail.date).year,
+            DateTime.parse(eventDetail.date).month,
+            DateTime.parse(eventDetail.date).day,
+          );
+
+          // Add the event details to the map
+          if (eventMap.containsKey(eventDate)) {
+            eventMap[eventDate]?.addAll(eventDetail.details.map((detail) => {
+              'title': detail.title,
+              'type': calendarEvent.type,
+            }).toList());
+          } else {
+            eventMap[eventDate] = eventDetail.details.map((detail) => {
+              'title': detail.title,
+              'type': calendarEvent.type,
+            }).toList();
+          }
+        }
+      }
+      // Return the populated map
+      return eventMap;
+    } catch (e) {
+      print("Error during event mapping: $e");
+      return {};
+    }
+  }
+
+  Future<void> updateEvents() async {
+    try {
+      Map<DateTime, List<Map<String, String>>> mappedEvents = await eventMapping();
+      setState(() {
+        mappedEvents.forEach((date, eventDetails) {
+          if (events.containsKey(date)) {
+            events[date]?.addAll(eventDetails);
+          } else {
+            events[date] = eventDetails;
+          }
+        });
+      });
+      //print("Events updated successfully");
+      //print(events);
+    } catch (e) {
+      print("Error updating events: $e");
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    eventdb = MongoDatabase.calendarevent;
     events = convertEventsToMap(widget.user.events);
+    updateEvents();
   }
 
   @override
@@ -186,21 +247,45 @@ class _CalendarPageState extends State<CalendarPage> {
                 });
               }
               try{
-                MongoDbModel user = widget.user;
-                user.events.clear();
-                events.forEach((date, eventList) {
-                  user.events.add(Event(
-                    date: date,
-                    details: eventList.map((event) => Detail(
-                      title: event['title'] ?? '',
-                      type: event['type'] ?? '',
-                    )).toList(),
-                  ));
-                });
-                String result = await MongoDatabase.update(user);
-                print(result);  // Output the result of the update operation
-
-                // Optionally, display a success message to the user
+                if(eventType=="personal"){
+                  MongoDbModel user = widget.user;
+                  user.events.clear();
+                  events.forEach((date, eventList) {
+                    if (eventList.any((event) => event['type'] == 'personal')) {
+                    user.events.add(Event(
+                      date: date,
+                      details: eventList
+                          .where((event) => event['type'] == 'personal') // Filter for 'personal' type
+                          .map((event) => Detail(
+                        title: event['title'] ?? '',
+                        type: event['type'] ?? '',
+                      ))
+                          .toList(),
+                    ));
+                    }
+                  });
+                  String result = await MongoDatabase.update(user);
+                }
+                else{
+                  final result = await eventdb.find(mongo.where.eq('type', eventType)).toList();
+                  if (result.isNotEmpty) {
+                    // If event exists, create CalendarEventModel from fetched data
+                    var calendarEvent = cal.CalendarEventModel.fromJson(result[0]);
+                    // Create new event and add to the events list of the calendar event
+                    var newEvent = cal.Event(
+                      date: selectedDate.toString(),
+                      details: [
+                        cal.Detail(
+                          title: eventController.text,
+                        ),
+                      ],
+                    );
+                    calendarEvent.events.add(newEvent);
+                    String updateResult = await MongoDatabase.updateCalendarEvent(calendarEvent);
+                  } else {
+                    print("No event found with the given type: $eventType");
+                  }
+                }
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Event added successfully")));
               }
               catch(e){
