@@ -68,7 +68,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   email: email,
                   phoneNumber: phone,
                   role: 'user', // Default role
-                  dob: '', // You can add a date of birth if needed
+                  dob: '',
+                  dept: '',
+                  section: '',
+                  year: '',
                   credit: 1000, // Default credit
                   events: [], // Empty events for now
                 );
