@@ -1,36 +1,34 @@
 import 'dart:convert';
 
-import 'package:mongo_dart/mongo_dart.dart';
-
 StudentModel StudentModelFromJson(String str) => StudentModel.fromJson(json.decode(str));
 
 String StudentModelToJson(StudentModel data) => json.encode(data.toJson());
 
 class StudentModel {
-  String id;
   String section;
   String dept;
-  List<Student> student;
+  String year;
+  List<Student> students;
 
   StudentModel({
-    required this.id,
     required this.section,
     required this.dept,
-    required this.student,
+    required this.year,
+    required this.students,
   });
 
   factory StudentModel.fromJson(Map<String, dynamic> json) => StudentModel(
-    id: json["_id"],
     section: json["section"],
     dept: json["dept"],
-    student: List<Student>.from(json["student"].map((x) => Student.fromJson(x))),
+    year: json["year"],
+    students: List<Student>.from(json["students"].map((x) => Student.fromJson(x))),
   );
 
   Map<String, dynamic> toJson() => {
-    "_id": id,
     "section": section,
     "dept": dept,
-    "student": List<dynamic>.from(student.map((x) => x.toJson())),
+    "year": year,
+    "students": List<dynamic>.from(students.map((x) => x.toJson())),
   };
 }
 
