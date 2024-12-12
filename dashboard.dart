@@ -9,6 +9,7 @@ import 'package:onestop/cgpacalculator.dart';
 import 'package:onestop/donatepage.dart';
 import 'package:onestop/examschedules.dart';
 import 'package:onestop/login.dart';
+import 'package:onestop/materialpage.dart';
 import 'package:onestop/profile.dart';
 import 'package:onestop/trackattendance.dart';
 import 'mongodbmodel.dart';
@@ -42,17 +43,18 @@ class _DashboardState extends State<Dashboard> {
         actions: [
           Row(
             children: [
-              const Icon(Icons.currency_exchange),
+              const Icon(Icons.currency_exchange,color: Colors.white60,),
               const SizedBox(width: 4),
               Text(
                 '${widget.user.credit}',
                 style: const TextStyle(fontSize: 18),
               ),
+              SizedBox(width: 5,),
               SizedBox(
                 width: 40,
                 child: ElevatedButton(onPressed: (){
                   Navigator.push(context, MaterialPageRoute(builder: (context)=>ProfilePage(user: widget.user)));
-                }, child: Icon(Icons.supervised_user_circle_outlined),
+                }, child: SizedBox(width: 30,height: 30,child: Image(image: NetworkImage('https://i1.wp.com/cdn-icons-png.flaticon.com/512/306/306473.png')),),
                     style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.transparent),
                       elevation: MaterialStateProperty.all(0),
                       padding: MaterialStateProperty.all(EdgeInsets.zero),
@@ -62,7 +64,7 @@ class _DashboardState extends State<Dashboard> {
                 width: 40,
                 child: ElevatedButton(onPressed: (){
                   Navigator.push(context, MaterialPageRoute(builder: (context)=>LoginPage()));
-                }, child: Icon(Icons.logout),
+                }, child: Icon(Icons.logout,color: Colors.white,),
                   style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.transparent),
                   elevation: MaterialStateProperty.all(0),
                   padding: MaterialStateProperty.all(EdgeInsets.zero),
@@ -100,8 +102,7 @@ class _DashboardState extends State<Dashboard> {
           ],
         ),
       ),
-      body: Center(
-        child: SingleChildScrollView(
+      body: SingleChildScrollView(
           child: Column(
             children: [
               Transform.translate(
@@ -146,7 +147,7 @@ class _DashboardState extends State<Dashboard> {
                 ),
               ),
               Transform.translate(
-                offset: Offset(40, 0),
+                offset: Offset(25, 0),
                 child: Row(
                   children: [
                     SizedBox(
@@ -179,7 +180,15 @@ class _DashboardState extends State<Dashboard> {
                         ),
                       ),
                     ),
-                    SizedBox(width: 30,),
+                    SizedBox(width: 7,),
+                    SizedBox(
+                      width: 50, // Set the desired width
+                      height: 50, // Set the desired height
+                      child: Image(
+                        image: NetworkImage('https://cdn.iconscout.com/icon/free/png-256/grinning-face-smile-emoji-happy-37705.png'),
+                      ),
+                    ),
+                    SizedBox(width: 7,),
                     SizedBox(
                       width: 120,
                       height: 60,
@@ -213,46 +222,150 @@ class _DashboardState extends State<Dashboard> {
                   ],
                 ),
               ),
-              Card(
-                elevation: 3,
-                margin: EdgeInsets.all(16),
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: ElevatedButton(onPressed: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=>SchedulePage()));
-                  }, child: Text("data")),
+              Transform.translate(
+                offset: Offset(25, 0),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 110,
+                      height: 110,
+                      child: Card(
+                        elevation: 3,
+                        margin: EdgeInsets.symmetric(vertical: 16),
+                        child: InkWell( // Makes the Card clickable
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => SchedulePage()),
+                            );
+                          },
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                image: DecorationImage(
+                                  image: NetworkImage(
+                                    'https://img.rawpixel.com/s3fs-private/rawpixel_images/website_content/k-26-nat-2846-lyj0758-1-exam_1.jpg?w=1200&h=1200&dpr=1&fit=clip&crop=default&fm=jpg&q=75&vib=3&con=3&usm=15&cs=srgb&bg=F4F4F3&ixlib=js-2.2.1&s=e11492eec5c6a0b6ae68e1a90810d491', // Background image URL
+                                  ),
+                                  fit: BoxFit.cover, // Adjust image to cover the container
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 210,
+                      height: 110,
+                      child: Card(
+                        elevation: 3,
+                        margin: EdgeInsets.all(16),
+                        child: InkWell(
+                          onTap: (){
+                            Navigator.push(context, MaterialPageRoute(builder: (context)=>AnnouncementPage()));
+                          },
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.announcement_outlined),
+                              SizedBox(width: 5,),
+                              Text("Announcement"),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Card(
-                elevation: 3,
-                margin: EdgeInsets.all(16),
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: ElevatedButton(onPressed: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=>AnnouncementPage()));
-                  }, child: Text("Announcement")),
+              Transform.translate(
+                offset: Offset(10, 0),
+                child: Row(
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: 170,
+                          height: 60,
+                          child: Card(
+                            elevation: 3,
+                            margin: EdgeInsets.symmetric(horizontal: 16),
+                            child: InkWell(
+                              onTap: (){
+                                Navigator.push(context, MaterialPageRoute(builder: (context)=>AttendancePage()));
+                              },
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.data_saver_on),
+                                  SizedBox(width: 5,),
+                                  Text("Attendance"),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 170,
+                          height: 90,
+                          child: Card(
+                            elevation: 3,
+                            margin: EdgeInsets.all(16),
+                            child: InkWell(
+                              onTap: (){
+                                Navigator.push(context, MaterialPageRoute(builder: (context)=>TrackAttendance()));
+                              },
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.track_changes),
+                                  SizedBox(width: 5,),
+                                  Text("Track Att"),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Transform.translate(
+                      offset: Offset(0, -7),
+                      child: SizedBox(
+                        width: 150,
+                        height: 133,
+                        child: Card(
+                          elevation: 3,
+                          margin: EdgeInsets.symmetric(horizontal: 0),
+                          child: InkWell( // Makes the Card clickable
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => StudyPage()),
+                              );
+                            },
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                  image: DecorationImage(
+                                    image: NetworkImage(
+                                      'https://image.freepik.com/free-vector/flat-university-concept-background_23-2148187599.jpg?w=1060', // Background image URL
+                                    ),
+                                    fit: BoxFit.cover, // Adjust image to cover the container
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Card(
-                elevation: 3,
-                margin: EdgeInsets.all(16),
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: ElevatedButton(onPressed: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=>AttendancePage()));
-                  }, child: Text("Attendance")),
-                ),
-              ),
-              Card(
-                elevation: 3,
-                margin: EdgeInsets.all(16),
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: ElevatedButton(onPressed: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=>TrackAttendance()));
-                  }, child: Text("Track Attendance")),
-                ),
-              ),
+
               Card(
                 elevation: 3,
                 margin: EdgeInsets.all(16),
@@ -266,7 +379,7 @@ class _DashboardState extends State<Dashboard> {
             ],
           ),
         ),
-      ),
-    );
+      );
+
   }
 }
