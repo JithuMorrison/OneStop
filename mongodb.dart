@@ -91,6 +91,9 @@ class MongoDatabase {
           .set('section',data.section)
           .set('year',data.year)
           .set('credit', data.credit)
+          .set('favblog', data.favblog)
+          .set('favmat', data.favmat)
+          .set('titles', data.titles)
           .set('events', data.events.map((event) => event.toJson()).toList());
 
       var result = await userCollection.update(filter, updateOperation);
@@ -99,6 +102,66 @@ class MongoDatabase {
       } else {
         return "No Data Updated";
       }
+    } catch (e) {
+      print("Error during update: $e");
+      return e.toString();
+    }
+  }
+
+  static Future<String> updatestudent(StudentModel data) async {
+    try {
+      attendance.update(
+        {"dept": data.dept, "section": data.section,"year":data.year},
+        {
+          "dept": data.dept,
+          "section": data.section,
+          "year":data.year,
+          "students": data.students.map((student) {
+            return {
+              "name": student.name,
+              "email": student.email,
+              "attendance": student.attendance.map((attendanceRecord) {
+                return [
+                  attendanceRecord[0],
+                  attendanceRecord[1].map<String>((date) => date.toString()).toList(),
+                ];
+              }).toList()..sort((a, b) => a[0].toString().compareTo(b[0].toString())),
+            };
+          }).toList(),
+        },
+        upsert: true,
+      );
+      return "Yess";
+    } catch (e) {
+      print("Error during update: $e");
+      return e.toString();
+    }
+  }
+
+  static Future<String> updatestudentfurther(StudentModel data) async {
+    try {
+      attendance.update(
+        {"dept": data.dept, "section": data.section,"year":data.year},
+        {
+          "dept": data.dept,
+          "section": data.section,
+          "year":data.year,
+          "students": data.students.map((student) {
+            return {
+              "name": student.name,
+              "email": student.email,
+              "attendance": student.attendance.map((attendanceRecord) {
+                return [
+                  attendanceRecord[0],
+                  attendanceRecord[1].map<String>((date) => date.toString()).toList(),
+                ];
+              }).toList(),
+            };
+          }).toList(),
+        },
+        upsert: true,
+      );
+      return "Yess";
     } catch (e) {
       print("Error during update: $e");
       return e.toString();
