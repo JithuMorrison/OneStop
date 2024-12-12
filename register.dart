@@ -72,7 +72,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   dept: '',
                   section: '',
                   year: '',
-                  credit: 1000, // Default credit
+                  credit: 1000,
+                  favmat: [],
+                  favblog: [],
+                  titles: [],
                   events: [], // Empty events for now
                 );
 
