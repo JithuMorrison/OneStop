@@ -83,10 +83,13 @@ class _ProfilePageState extends State<ProfilePage> {
                   section: sectionController.text,
                   year: yearController.text,
                   username: usernameController.text,
-                  credit: widget.user.credit, // Retaining existing credits
-                  role: widget.user.role, // Retaining existing role
-                  dob: widget.user.dob, // Retaining existing dob
-                  events: widget.user.events, // Retaining existing events
+                  credit: widget.user.credit,
+                  favblog: widget.user.favblog,
+                  favmat: widget.user.favmat,
+                  titles: widget.user.titles,
+                  role: widget.user.role,
+                  dob: widget.user.dob,
+                  events: widget.user.events,
                 );
                 MongoDatabase.update(updatedUser).then((message) {
                   Navigator.pop(context);
