@@ -18,6 +18,9 @@ class MongoDbModel {
   String section;
   String year;
   int credit;
+  List<String> favblog;
+  List<String> favmat;
+  List<String> titles;
   List<Event> events;
 
   MongoDbModel({
@@ -32,6 +35,9 @@ class MongoDbModel {
     required this.section,
     required this.year,
     required this.credit,
+    required this.favblog,
+    required this.favmat,
+    required this.titles,
     required this.events,
   });
 
@@ -47,6 +53,9 @@ class MongoDbModel {
     section: json["section"],
     year: json["year"],
     credit: json["credit"],
+    favblog: List<String>.from(json["favblog"].map((x) => x)),
+    favmat: List<String>.from(json["favmat"].map((x) => x)),
+    titles: List<String>.from(json["titles"].map((x) => x)),
     events: List<Event>.from(json["events"].map((x) => Event.fromJson(x))),
   );
 
@@ -58,10 +67,13 @@ class MongoDbModel {
     "phone_number": phoneNumber,
     "role": role,
     "dob": dob,
-    "dept":dept,
-    "section":section,
-    "year":year,
+    "dept": dept,
+    "section": section,
+    "year": year,
     "credit": credit,
+    "favblog": List<dynamic>.from(favblog.map((x) => x)),
+    "favmat": List<dynamic>.from(favmat.map((x) => x)),
+    "titles": List<dynamic>.from(titles.map((x) => x)),
     "events": List<dynamic>.from(events.map((x) => x.toJson())),
   };
 }
