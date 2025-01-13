@@ -1,7 +1,10 @@
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:onestop/login.dart';
 import 'package:onestop/mongodb.dart';
 import 'package:onestop/mongodbmodel.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfilePage extends StatefulWidget {
   final MongoDbModel user;
@@ -84,6 +87,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   year: yearController.text,
                   username: usernameController.text,
                   credit: widget.user.credit,
+                  followers: widget.user.followers,
+                  following: widget.user.following,
                   favblog: widget.user.favblog,
                   favmat: widget.user.favmat,
                   titles: widget.user.titles,
@@ -103,6 +108,109 @@ class _ProfilePageState extends State<ProfilePage> {
                 Navigator.pop(context); // Close dialog without changes
               },
               child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  final SupabaseClient supabase = Supabase.instance.client;
+  final String bucketName = 'jithu';
+  List<Map<String, dynamic>> certificates = [];
+
+  Future<void> uploadStudy(String name, List<File> files) async {
+    try {
+      List<String> fileUrls = [];
+      for (var file in files) {
+        final fileName = file.uri.pathSegments.last;
+        final filePath = 'certificates/$fileName';
+        final uploadResponse = await supabase.storage.from(bucketName).upload(filePath, file);
+        final filePublicUrl = supabase.storage.from(bucketName).getPublicUrl(filePath);
+        fileUrls.add(filePublicUrl);
+      }
+
+      final response = await supabase.from('users').insert({
+        'name': name,
+        'files_list': fileUrls,
+      }).execute();
+
+      setState(() {
+        certificates.add({
+          'title': name,
+          'files_list': fileUrls,
+        });
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Study material uploaded successfully!')));
+    } catch (e) {
+      print(e);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error uploading study material: $e')));
+    }
+  }
+
+  Future<void> fetchStudies() async {
+    try {
+      final response = await supabase.from('users').select('*').execute();
+      setState(() {
+        certificates = List<Map<String, dynamic>>.from(response.data);
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error fetching study materials: $e')));
+    }
+  }
+
+  void openUploadStudyDialog() {
+    List<File> selectedFiles = [];
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Upload Certificates'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ElevatedButton(
+                onPressed: () async {
+                  final result = await FilePicker.platform.pickFiles(
+                    allowMultiple: true, // Allow multiple files
+                    type: FileType.custom,
+                    allowedExtensions: ['pdf','docx','jpg','png'],
+                  );
+
+                  if (result != null) {
+                    setState(() {
+                      selectedFiles = result.files.map((e) => File(e.path!)).toList();
+                    });
+                  }
+                },
+                child: Text('Add Certificates'),
+              ),
+              if (selectedFiles.isNotEmpty) ...[
+                SizedBox(height: 8),
+                Text('Selected Files:'),
+                ...selectedFiles.map((file) => Text(file.uri.pathSegments.last)).toList(),
+              ]
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                if (widget.user.name.isNotEmpty && selectedFiles.isNotEmpty) {
+                  uploadStudy(widget.user.name, selectedFiles);
+                  Navigator.pop(context);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please fill all fields and select files')));
+                }
+              },
+              child: Text('Upload'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Cancel'),
             ),
           ],
         );
@@ -140,6 +248,13 @@ class _ProfilePageState extends State<ProfilePage> {
       },
     );
   }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchStudies();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -278,6 +393,11 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: const Text('Delete'),
                   ),
                 ],
+              ),
+              const SizedBox(height: 16,),
+              ElevatedButton(
+                onPressed: openUploadStudyDialog,
+                child: Text('Upload Certificates'),
               ),
             ],
           ),
